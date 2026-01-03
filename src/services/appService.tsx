@@ -30,3 +30,17 @@ export const checkOtpApi = (valueConfirm: string): Promise<BackendResponse> => {
 export const getEmptyPositionApi = (): Promise<BackendResponse> => {
     return axios.get("/get-empty-position");
 }
+
+export const checkoutApi = (qrCode: string): Promise<BackendResponse> => {
+    return axios.post("/checkout", {
+        qrCode
+    })
+}
+
+export const getHistoryApi = (): Promise<BackendResponse> => {
+    return axios.get("/get-history");
+}
+
+export const createTicketTestApi = (): Promise<BackendResponse> => {
+    return axios.get("/create-ticket-test");
+}

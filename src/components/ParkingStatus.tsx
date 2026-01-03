@@ -42,7 +42,7 @@ const ParkingStatus = (): JSX.Element => {
                                 id: index + 1,
                                 status: emptyPosition.includes(index + 1) ? 0 : 1
                             })).map((item) => (
-                                <div style={{width: "20%", display: "flex", flexFlow: "column", alignItems: "center"}}>
+                                <div style={{width: "20%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                                     <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
                                         <CarFront strokeWidth={1} size={24} color={`${item.status == 0 ? "#dc3545" : "black"}`} />
                                         <div style={{color: `${item.status == 0 ? "#dc3545" : "black"}`}}>{item.id}</div>
