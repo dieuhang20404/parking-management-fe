@@ -34,7 +34,7 @@ function App() {
     <>
       {contextHolder}
       <AppRoute />
-      <ParkingMap />
+      {/* <ParkingMap /> */}
     </>
   )
 }

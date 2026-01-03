@@ -1,10 +1,15 @@
-import { Col, Row, Table, type TableProps } from "antd";
-import { useState, type JSX } from "react";
-import type { HistoryType } from "../configs/interface";
+import { Col, Modal, Row, Table, type TableProps } from "antd";
+import { useEffect, useState, type JSX } from "react";
+import { messageService, type HistoryType } from "../configs/interface";
+import { getHistoryApi } from "../services/appService";
+import dayjs from "dayjs";
 
 const ParkingHistory = (): JSX.Element => {
     const [history, setHistory] = useState<HistoryType[]>([]);
     const [getHistoryLoading, setGetHistoryLoading] = useState<boolean>(false);
+    const [showImage, setShowImage] = useState<boolean>(false);
+    const [imageInUrl, setImageInUrl] = useState<string>("");
+    const [imageOutUrl, setImageOutUrl] = useState<string | null>(null);
 
     const columns: TableProps<HistoryType>["columns"] = [
         {
@@ -53,7 +58,9 @@ const ParkingHistory = (): JSX.Element => {
                 <div 
                     className="text-link" 
                     onClick={() => {
-
+                        setShowImage(true);
+                        setImageInUrl(record.imageIn);
+                        setImageOutUrl(record.imageOut);
                     }}
                 >
                     Xem
@@ -61,6 +68,38 @@ const ParkingHistory = (): JSX.Element => {
             )
         }
     ]
+
+    useEffect(() => {
+        getHistory()
+    }, [])
+
+    const getHistory = async () => {
+        setGetHistoryLoading(true);
+        try {
+            const result = await getHistoryApi();
+            if (result.code == 0) {
+                const rawData: any = result.data;
+                setHistory(rawData.map((item: any) => (
+                    {
+                        id: item.id,
+                        plateNumber: item.plateNumber,
+                        timeIn: dayjs(item.timeIn),
+                        timeOut: item.timeOut ? dayjs(item.timeOut) : null,
+                        parkingLotId: item.parkingLotId,
+                        imageIn: item.imageIn,
+                        imageOut: item.imageOut ?? null
+                    }
+                )))
+            } else {
+                messageService.error(result.message);
+            }
+        } catch(e) {
+            console.log(e);
+            messageService.error("Xảy ra lỗi ở server");
+        } finally {
+            setGetHistoryLoading(false);
+        }
+    }
 
     return(
         <>
@@ -79,6 +118,42 @@ const ParkingHistory = (): JSX.Element => {
                     />
                 </Col>
             </Row>
+            <Modal
+                title={null}
+                open={showImage}
+                footer={null}
+                centered={true}
+                maskClosable={false}
+                onCancel={() => {setShowImage(false)}}
+            >
+                <Row className="pb-1 pt-3" style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                    <Col span={24}>
+                        <Row gutter={[20, 0]}>
+                            <Col span={12} style={{display: "flex", justifyContent: "center"}}>
+                                <div style={{fontSize: "20px"}}>Ảnh xe vào</div>
+                            </Col>
+                            <Col span={12} style={{display: "flex", justifyContent: "center"}}>
+                                <div style={{fontSize: "20px"}}>Ảnh xe ra</div>
+                            </Col>
+                        </Row>
+                        <Row gutter={[20, 0]}>
+                            <Col span={12} style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                                <img style={{width: "100%", height: "auto", aspectRatio: "1/1"}} src={imageInUrl} />
+                            </Col>
+                            <Col span={12} style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                                {
+                                    imageOutUrl ? (
+                                        <img style={{width: "100%", height: "auto", aspectRatio: "1/1"}} src={imageOutUrl} />
+                                    ) : (
+                                        <div style={{fontSize: "20px", color: "rgba(0, 0, 0, 0.3)"}}>Chưa có</div>
+                                    )
+                                }
+                            </Col>
+                        </Row>
+                    
+                    </Col>
+                </Row>
+            </Modal>
         </>
     )
 }
