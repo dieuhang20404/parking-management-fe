@@ -1,33 +1,15 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 
-const getSessionKey = (): String | null => {
-  const item = localStorage.getItem("sessionKey");
-
-  if (!item) {
-    return null;
-  }
-
-  const sessionKey = JSON.parse(item);
-  if (Date.now() > sessionKey.expiry) {
-    localStorage.removeItem("sessionKey");
-    return null;
-  }
-
-  return sessionKey.value;
-}
-
-
 const instance: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_BASE_URL
 });
 
-// instance.defaults.withCredentials = true;
-
 instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-        const sessionKey = getSessionKey();
-        if (sessionKey) {
-          config.headers.Authorization = `Bearer ${sessionKey}`;
+        const key = localStorage.getItem("key");
+        const admin = localStorage.getItem("admin");
+        if (key) {
+          config.headers.Authorization = `Bearer ${key + "=" + admin}`;
         }
         return config;
     },
