@@ -2,10 +2,12 @@
 import { PARKING_LAYOUT, SLOT_INDEX } from "../util/board";
 
 export type Cell = {
-    type: "wall" | "road" | "slot" | "sensor";
+    type: "slot" | "road" | "entrance" | "exit" | "wall";
     id?: number;
-    status?: number;
+    status?: number; // 0: trống, 1: có xe, 2: khóa
+    isPath?: boolean;
 };
+
 
 export const buildBaseMap = (): Cell[][] => {
     const slotMap = new Map<string, number>();
