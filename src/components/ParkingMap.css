@@ -9,17 +9,17 @@
   margin-bottom: 12px;
 }
 
-.parking-map {
-  display: grid;
-  grid-template-rows: repeat(var(--rows), 1fr);
-  grid-template-columns: repeat(var(--cols), 1fr);
-  width: min(90vw, 600px);
-  aspect-ratio: var(--cols) / var(--rows);
-  margin: 0 auto;
-  background: #e0e0e0;
-  border: 2px solid #222;
-  border-radius: 8px;
-}
+/*.parking-map {*/
+/*  display: grid;*/
+/*  width: min(90vw, 600px);*/
+/*  grid-template-rows: repeat(var(--rows), 1fr);*/
+/*  grid-template-columns: repeat(var(--cols), 1fr);*/
+/*  aspect-ratio: var(--cols) / var(--rows);*/
+/*  margin: 0 auto;*/
+/*  background: #e0e0e0;*/
+/*  border: 2px solid #222;*/
+/*  border-radius: 8px;*/
+/*}*/
 
 .map-cell {
   width: 100%;
@@ -91,7 +91,7 @@
   border: 1px solid #999;
 } */
 
-/* Màu quy ước (bạn chỉnh cho giống map của bạn) */
+
 .legend-empty {
   background: #e0e0e0;
 }

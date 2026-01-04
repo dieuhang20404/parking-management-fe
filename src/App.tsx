@@ -1,7 +1,7 @@
 import { message } from "antd";
 import { messageService } from "./configs/interface";
 import AppRoute from "./routes/appRoute";
-import ParkingMap from "./components/ParkingMap";
+
 
 
 
@@ -34,7 +34,6 @@ function App() {
     <>
       {contextHolder}
       <AppRoute />
-      <ParkingMap />
     </>
   )
 }
