@@ -31,8 +31,11 @@ export const getEmptyPositionApi = (): Promise<BackendResponse> => {
     return axios.get("/get-empty-position");
 }
 
-export const getFindPathApi = (): Promise<BackendResponse> => {
-    return axios.get("/get-find-path");
+export const getFindPathApi = (position?: [number, number]): Promise<BackendResponse> => {
+    const [x, y] = position || [0, 0];
+    return axios.get("/get-find-path", {
+        params: { x, y }
+    });
 }
 export const checkoutApi = (qrCode: string): Promise<BackendResponse> => {
     return axios.post("/checkout", {
