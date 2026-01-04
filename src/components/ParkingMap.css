@@ -1,0 +1,56 @@
+/* Chỉ hiển thị trên mobile */
+@media (min-width: 768px) {
+    .parking-wrapper {
+        display: none;
+    }
+}
+
+.parking-wrapper {
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(22, minmax(10px, 1fr));
+    gap: 1px;
+    width: 95vw;
+    max-width: 420px;
+}
+
+/* Cell base */
+.cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 2px;
+}
+
+/* Types */
+.cell.wall {
+    background: #333;
+}
+
+.cell.road {
+    background: #1f1f1f;
+}
+
+.cell.slot {
+    background: #2e7d32; /* trống */
+}
+
+.cell.slot.occupied {
+    background: #c62828; /* có xe */
+}
+
+.cell.slot.locked {
+    background: #ff8f00; /* đang đi tới */
+}
+
+.cell.sensor {
+    background: #03a9f4;
+}
