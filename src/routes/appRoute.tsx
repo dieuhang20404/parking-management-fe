@@ -8,6 +8,7 @@ import ParkingStatus from "../components/ParkingStatus";
 import ParkingHistory from "../components/ParkingHistory";
 import ConfirmAdmin from "../components/ConfirmAdmin";
 import ParkingMap from "../components/ParkingMap.tsx";
+import ParkingSupervised from "../components/ParkingSupervised";
 
 const CustomerHeader = (): JSX.Element => {
     return(
@@ -40,6 +41,7 @@ const AppRoute = (): JSX.Element => {
                 }
             >
                 <Route index element={<ConfirmAdmin />} />
+                <Route path="supervised" element={<ParkingSupervised />} />
                 <Route path="history"element={<ParkingHistory />} />
                 <Route path="status" element={<ParkingStatus />} />
                 

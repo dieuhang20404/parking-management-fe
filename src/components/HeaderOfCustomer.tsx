@@ -8,13 +8,15 @@ const HeaderOfCustomer = (): JSX.Element => {
     const [loading, setLoading] = useState<boolean>(false);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [plateNumber, setPlateNumber] = useState<string>("");
+    const [imageIn, setImageIn] = useState<string>("");
 
     const getPlateNumber = async () => {
         setLoading(true)
         try {
             const result = await getPlateNumberApi();
             if (result.code == 0) {
-                setPlateNumber(result.data);
+                setPlateNumber(result.data.plateNumber);
+                setImageIn(result.data.detectResult);
                 setShowConfirm(true);
             } else {
                 messageService.error(result.message)
@@ -31,7 +33,7 @@ const HeaderOfCustomer = (): JSX.Element => {
         setShowConfirm(false);
         setLoading(true)
         try {
-            const result = await createTicketApi();
+            const result = await createTicketApi(plateNumber, imageIn);
             if (result.code == 0) {
                 // Thêm vé vào bảng danh sách vé
 

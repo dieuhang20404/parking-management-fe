@@ -6,14 +6,18 @@ interface UserContextType {
     isAuthenticated: boolean,
     setIsAuthenticated: Dispatch<SetStateAction<boolean>>,
     isLoading: boolean,
-    setIsLoading: Dispatch<SetStateAction<boolean>>
+    setIsLoading: Dispatch<SetStateAction<boolean>>,
+    irData: number[],
+    setIrData: Dispatch<SetStateAction<number[]>>
 }
 
 export const UserContext = createContext<UserContextType>({
     isAuthenticated: false,
     setIsAuthenticated: () => {},
     isLoading: false,
-    setIsLoading: () => {}
+    setIsLoading: () => {},
+    irData: [0, 0, 0, 0, 0],
+    setIrData: () => {}
 })
 
 interface UserProviderProps {
@@ -23,6 +27,8 @@ interface UserProviderProps {
 export const UserProvider = ({children}: UserProviderProps): JSX.Element => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [irData, setIrData] = useState<number[]>([0, 0, 0, 0, 0]);
+
     useEffect(() => {
         reloadPage();
     }, [])
@@ -55,7 +61,9 @@ export const UserProvider = ({children}: UserProviderProps): JSX.Element => {
                 isAuthenticated: isAuthenticated,
                 setIsAuthenticated: setIsAuthenticated,
                 isLoading: isLoading,
-                setIsLoading: setIsLoading
+                setIsLoading: setIsLoading,
+                irData: irData,
+                setIrData: setIrData
             }}
         >
             {children}

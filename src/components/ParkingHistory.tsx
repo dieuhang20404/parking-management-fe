@@ -3,6 +3,7 @@ import { useEffect, useState, type JSX } from "react";
 import { messageService, type HistoryType } from "../configs/interface";
 import { getHistoryApi } from "../services/appService";
 import dayjs from "dayjs";
+import { socket } from "../configs/socket";
 
 const ParkingHistory = (): JSX.Element => {
     const [history, setHistory] = useState<HistoryType[]>([]);
@@ -68,6 +69,31 @@ const ParkingHistory = (): JSX.Element => {
             )
         }
     ]
+
+    useEffect(() => {
+        const handleNewTicket = (ticket: any) => {
+            console.log(ticket);
+            setHistory((prev) => (
+                [
+                    {
+                        id: ticket.id,
+                        plateNumber: ticket.plateNumber,
+                        timeIn: dayjs(ticket.timeIn),
+                        timeOut: ticket.timeOut ? dayjs(ticket.timeOut) : null,
+                        parkingLotId: ticket.parkingLotId,
+                        imageIn: ticket.imageIn,
+                        imageOut: ticket.imageOut ?? null
+                    }, 
+                    ...prev
+                ]
+            ))
+        }
+        socket.on("ticket:create", handleNewTicket);
+
+        return () => {
+            socket.off("ticket:create", handleNewTicket);
+        }
+    }, [])
 
     useEffect(() => {
         getHistory()
