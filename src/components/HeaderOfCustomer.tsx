@@ -3,8 +3,11 @@ import { useContext, useEffect, useState, type JSX } from "react";
 import { messageService, useScreens } from "../configs/interface";
 import { createTicketApi, getPlateNumberApi } from "../services/appService";
 import LoadingModal from "./LoadingModal";
+import { UserContext } from "../configs/globalVariable";
+import dayjs from "dayjs";
 
 const HeaderOfCustomer = (): JSX.Element => {
+    const {ticketList, setTicketList} = useContext(UserContext);
     const [loading, setLoading] = useState<boolean>(false);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [plateNumber, setPlateNumber] = useState<string>("");
@@ -36,7 +39,20 @@ const HeaderOfCustomer = (): JSX.Element => {
             const result = await createTicketApi(plateNumber, imageIn);
             if (result.code == 0) {
                 // Thêm vé vào bảng danh sách vé
-
+                setTicketList((prev) => (
+                    [
+                        {
+                            id: result.data.id,
+                            plateNumber: result.data.plateNumber,
+                            timeIn: dayjs(result.data.timeIn),
+                            timeOut: result.data.timeOut ? dayjs(result.data.timeOut) : null,
+                            uuid: result.data.uuid,
+                            qrCode: result.data.qrCode,
+                            parkingLotId: result.data.parkingLotId
+                        },
+                        ...prev
+                    ]
+                ))
                 // Hiện map
                 
             } else {

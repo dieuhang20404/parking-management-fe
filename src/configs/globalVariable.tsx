@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from "react";
-import { messageService } from "./interface";
+import { messageService, type TicketType } from "./interface";
 import { reloadPageApi } from "../services/appService";
 
 interface UserContextType {
@@ -8,7 +8,9 @@ interface UserContextType {
     isLoading: boolean,
     setIsLoading: Dispatch<SetStateAction<boolean>>,
     irData: number[],
-    setIrData: Dispatch<SetStateAction<number[]>>
+    setIrData: Dispatch<SetStateAction<number[]>>,
+    ticketList: TicketType[],
+    setTicketList: Dispatch<SetStateAction<TicketType[]>>
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -17,7 +19,9 @@ export const UserContext = createContext<UserContextType>({
     isLoading: false,
     setIsLoading: () => {},
     irData: [0, 0, 0, 0, 0],
-    setIrData: () => {}
+    setIrData: () => {},
+    ticketList: [],
+    setTicketList: () => {}
 })
 
 interface UserProviderProps {
@@ -28,6 +32,7 @@ export const UserProvider = ({children}: UserProviderProps): JSX.Element => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [irData, setIrData] = useState<number[]>([0, 0, 0, 0, 0]);
+    const [ticketList, setTicketList] = useState<TicketType[]>([]);
 
     useEffect(() => {
         reloadPage();
@@ -63,7 +68,9 @@ export const UserProvider = ({children}: UserProviderProps): JSX.Element => {
                 isLoading: isLoading,
                 setIsLoading: setIsLoading,
                 irData: irData,
-                setIrData: setIrData
+                setIrData: setIrData,
+                ticketList: ticketList,
+                setTicketList: setTicketList
             }}
         >
             {children}

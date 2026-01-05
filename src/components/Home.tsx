@@ -1,13 +1,14 @@
 import { Button, Col, Modal, Row, Table, type TableProps } from "antd";
-import { useEffect, useState, type JSX } from "react";
+import { useContext, useEffect, useState, type JSX } from "react";
 import { messageService, type TicketTable, type TicketType } from "../configs/interface";
 import dayjs from "dayjs";
 import { checkoutApi, createTicketTestApi, getAllTicketApi } from "../services/appService";
 import LoadingModal from "./LoadingModal";
 import { socket } from "../configs/socket";
+import { UserContext } from "../configs/globalVariable";
 
 const Home = (): JSX.Element => {
-    const [ticketList, setTicketList] = useState<TicketType[]>([]);
+    const {ticketList, setTicketList} = useContext(UserContext);
     const [getTicketLoading, setGetTicketLoading] = useState<boolean>(false);
     const [imgUrl, setImgUrl] = useState<string>("");
     const [showTicket, setShowTicket] = useState<boolean>(false);
