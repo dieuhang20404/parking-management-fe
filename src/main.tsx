@@ -6,12 +6,16 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import "./main.scss"; 
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './configs/globalVariable.tsx';
+import ParkingMap from "./components/ParkingMap.tsx";
+import ParkingStatus from "./components/ParkingStatus.tsx";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <UserProvider>
         <App />
+          <ParkingMap />
+          <ParkingStatus />
       </UserProvider>
     </BrowserRouter>
   </StrictMode>,

@@ -7,6 +7,7 @@ import HeaderOfAdmin from "../components/HeaderOfAdmin";
 import ParkingStatus from "../components/ParkingStatus";
 import ParkingHistory from "../components/ParkingHistory";
 import ConfirmAdmin from "../components/ConfirmAdmin";
+import ParkingMap from "../components/ParkingMap.tsx";
 import ParkingSupervised from "../components/ParkingSupervised";
 
 const CustomerHeader = (): JSX.Element => {
@@ -47,8 +48,10 @@ const AppRoute = (): JSX.Element => {
             </Route>
             <Route element={<CustomerHeader />}>
                 <Route path="/" element={<Home />} />
+                <Route path = "/findPath" element = {<ParkingMap />} />
             </Route>
             <Route path="*" element={<NotFound />} />
+
         </Routes>
     )
 }

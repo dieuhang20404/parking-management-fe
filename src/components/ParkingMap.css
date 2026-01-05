@@ -1,113 +1,118 @@
-.map-container {
-  text-align: center;
-  position: relative;
-  padding: 16px;
-  width: 100%;
+/*.cell.path {*/
+/*    background-color: #4CAF50 !important;*/
+/*    border: 2px solid #2E7D32;*/
+/*    animation: pathBlink 1s ease-in-out infinite;*/
+/*}*/
+
+/*@keyframes pathBlink {*/
+/*    0%, 100% {*/
+/*        opacity: 1;*/
+/*    }*/
+/*    50% {*/
+/*        opacity: 0.6;*/
+/*    }*/
+/*}*/
+
+/*!* Hoặc dùng màu khác để dễ nhìn hơn *!*/
+/*.cell.path {*/
+/*    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+/*    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);*/
+/*}*/
+/* ✅ Đường đi - Tối ưu cho mobile */
+.cell.path {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+    border: 3px solid #fff;
+    animation: pathPulse 1.5s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
 }
 
-.map-title {
-  margin-bottom: 12px;
+/* Animation mượt mà hơn cho mobile */
+@keyframes pathPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 25px rgba(102, 126, 234, 1);
+    }
 }
 
-.parking-map {
-  display: grid;
-  grid-template-rows: repeat(var(--rows), 1fr);
-  grid-template-columns: repeat(var(--cols), 1fr);
-  width: min(90vw, 600px);
-  aspect-ratio: var(--cols) / var(--rows);
-  margin: 0 auto;
-  background: #e0e0e0;
-  border: 2px solid #222;
-  border-radius: 8px;
+/* Icon mũi tên chỉ đường (optional) */
+.cell.path::after {
+    content: '→';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.map-cell {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
+/* Điểm bắt đầu */
+.cell.path-start {
+    background: radial-gradient(circle, #4CAF50 0%, #2E7D32 100%);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.9);
 }
 
-/* MÀU TRẠNG THÁI */
-.cell-1 { background: #8bc34a; } /* vị trí đỗ */
-.cell-0 { background: #cfcfcf; } /* lối đi */
-.cell-2,
-.cell-3 { background: #424242; } /* tường */
-.cell-8 { background: #ff9800; } /* cửa vào */
-
-/* Cảm biến */
-.cell-sensor {
-  background: #ff5722 !important;
-  animation: blink 1.4s infinite;
+.cell.path-start::after {
+    content: '🚗';
+    font-size: 24px;
 }
 
-@keyframes blink {
-  50% { opacity: 0.5; }
+/* Điểm đích */
+.cell.path-end {
+    background: radial-gradient(circle, #FF6B6B 0%, #C92A2A 100%);
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.9);
+    animation: pathEnd 1s ease-in-out infinite;
 }
 
-/* Responsive text + layout */
+.cell.path-end::after {
+    content: '🅿️';
+    font-size: 24px;
+}
+
+@keyframes pathEnd {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* Tối ưu cho màn hình nhỏ */
+@media (max-width: 768px) {
+    .cell.path {
+        border-width: 2px;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.7);
+    }
+
+    .cell.path::after {
+        font-size: 16px;
+    }
+
+    .cell.path-start::after,
+    .cell.path-end::after {
+        font-size: 20px;
+    }
+}
+
+/* Tối ưu cho màn hình rất nhỏ */
 @media (max-width: 480px) {
-  .legend-box {
-    right: 6px;        /* sát hơn vào mép */
-    top: 6px;          /* gần hơn */
-    padding: 8px 10px; /* nhỏ hơn */
-    font-size: 12px;   /* text nhỏ đi */
-    width: 150px;      /* THU NHỎ chiều rộng để không tràn */
-    transform: scale(0.95); /* thu nhỏ overall 5% */
-  }
+    .cell.path {
+        animation: pathPulse 2s ease-in-out infinite;
+    }
 
-  .legend-color {
-    width: 14px;
-    height: 14px;
-  }
+    .cell.path::after {
+        font-size: 14px;
+    }
 }
-/* Bảng chú thích */
-.legend-box {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: white;
-  padding: 10px 14px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 5;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Ô màu trong legend */
-/* .legend-color {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  display: inline-block;
-  border: 1px solid #999;
-} */
-
-/* Màu quy ước (bạn chỉnh cho giống map của bạn) */
-.legend-empty {
-  background: #e0e0e0;
-}
-
-.legend-parked {
-  background: #444;
-}
-
-.legend-sensor {
-  background: #6ec1ff;
-}
-
-.legend-sensor-main {
-  background: #0077ff;
-}
-
-.legend-path {
-  background: #ffcc00;
+.cell.path {
+    background: linear-gradient(135deg, #00D4FF 0%, #0099FF 100%);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
 }

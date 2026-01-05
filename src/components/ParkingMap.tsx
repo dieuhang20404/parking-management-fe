@@ -1,154 +1,295 @@
-// src/components/ParkingMap.tsx
-import React, { useEffect, useMemo, useState } from "react";
-import boards from "../data/broads";
-import "./ParkingMap.css";
-import getRandomSensorSlots, { type Slot } from "../util/randomPosition";
+import { Col, Row, Button, message } from "antd";
+import { useEffect, useState, type JSX } from "react";
+import { messageService } from "../configs/interface";
+import LoadingModal from "./LoadingModal";
+import { getEmptyPositionApi, getFindPathApi } from "../services/appService";
+import { CarFront, Navigation } from "lucide-react";
+import React from "react";
 
+interface PathData {
+    path: [number, number][];
+    targetSlot: number;
+    sensorId: number | string;
+    distance: number;
+}
 
-type Props = {
-  matrix?: number[][];
-  sensorCount?: number;
-  repStrategy?: "first" | "random" | "center";
-};
+const ParkingMap = (): JSX.Element => {
+    const [emptyPosition, setEmptyPosition] = useState<number[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [pathData, setPathData] = useState<PathData | null>(null);
+    const [pathSlotIds, setPathSlotIds] = useState<number[]>([]);
 
-export default function ParkingMap({
-  matrix = boards,
-  sensorCount = 5,
-  repStrategy = "random",
-}: Props) {
-  const rows = matrix.length;
-  const cols = matrix[0]?.length ?? 0;
+    useEffect(() => {
+        getEmptyPosition();
+    }, [])
 
-  // slots: mỗi slot có group[] và rep
-  const [slots, setSlots] = useState<Slot[]>([]);
-
-  // chỉ random 1 lần khi mount (nếu muốn refresh, expose function hoặc prop thay đổi)
-  useEffect(() => {
-    const s = getRandomSensorSlots(matrix, sensorCount, { strategy: repStrategy });
-    setSlots(s);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally only on mount
-
-  // tập các toạ độ chính (rep) để lookup nhanh
-  const repsSet = useMemo(() => {
-    const set = new Set<string>();
-    for (const s of slots) set.add(`${s.rep.x}-${s.rep.y}`);
-    return set;
-  }, [slots]);
-
-  // map group cells to quick lookup (cell -> slotIndex) nếu cần
-  const groupLookup = useMemo(() => {
-    const map = new Map<string, number>();
-    slots.forEach((slot, i) => {
-      slot.group.forEach((cell) => map.set(`${cell.x}-${cell.y}`, i));
-    });
-    return map;
-  }, [slots]);
-
-  const isSensorMain = (r: number, c: number) => repsSet.has(`${r}-${c}`);
-  const isSensorCell = (r: number, c: number) => groupLookup.has(`${r}-${c}`);
-
-  // border gradients logic (kept) — memoized
-  const borderGradients = useMemo(() => {
-    const borders: Record<string, string> = {};
-    const rowsLocal = rows;
-    const colsLocal = cols;
-    const slotTypes = [1, -1, -2];
-    const cornerGradients: Record<number, string> = {
-      6: "linear-gradient(to right, #cfcfcf 50%, transparent 50%), linear-gradient(to bottom, #cfcfcf 50%, transparent 50%)",
-      7: "linear-gradient(to left, #cfcfcf 50%, transparent 50%), linear-gradient(to bottom, #cfcfcf 50%, transparent 50%)",
-      4: "linear-gradient(to right, #cfcfcf 50%, transparent 50%), linear-gradient(to top, #cfcfcf 50%, transparent 50%)",
-      5: "linear-gradient(to left, #cfcfcf 50%, transparent 50%), linear-gradient(to top, #cfcfcf 50%, transparent 50%)",
-    };
-
-    for (let r = 0; r < rowsLocal; r++) {
-      for (let c = 0; c < colsLocal; c++) {
-        const cell = matrix[r][c];
-        if (cornerGradients[cell]) {
-          borders[`${r}-${c}`] = cornerGradients[cell];
+    const getEmptyPosition = async () => {
+        setLoading(true);
+        try {
+            const result = await getEmptyPositionApi();
+            if (result.code == 0) {
+                setEmptyPosition(result.data);
+            } else {
+                messageService.error(result.message);
+            }
+        } catch(e) {
+            console.log(e);
+            messageService.error("Xảy ra lỗi ở server");
+        } finally {
+            setLoading(false);
         }
-
-        if (!slotTypes.includes(cell)) continue;
-
-        const neighbors = {
-          top: r > 0 ? matrix[r - 1][c] : null,
-          bottom: r < rowsLocal - 1 ? matrix[r + 1][c] : null,
-          left: c > 0 ? matrix[r][c - 1] : null,
-          right: c < colsLocal - 1 ? matrix[r][c + 1] : null,
-        };
-
-        if (neighbors.top === 9)
-          borders[`${r - 1}-${c}`] =
-            "linear-gradient(to bottom, #cfcfcf 50%, transparent 50%)";
-        if (neighbors.bottom === 9)
-          borders[`${r + 1}-${c}`] =
-            "linear-gradient(to top, #cfcfcf 50%, transparent 50%)";
-        if (neighbors.left === 9)
-          borders[`${r}-${c - 1}`] =
-            "linear-gradient(to right, #cfcfcf 50%, transparent 50%)";
-        if (neighbors.right === 9)
-          borders[`${r}-${c + 1}`] =
-            "linear-gradient(to left, #cfcfcf 50%, transparent 50%)";
-      }
     }
 
-    return borders;
-  }, [matrix, rows, cols]);
+    const getFindPath = async () => {
+        setLoading(true);
+        try {
+            const response = await getFindPathApi();
 
-  return (
-    <div className="map-container">
-      <h2 className="map-title">Bản đồ bãi đỗ xe</h2>
-      {/* <div className="legend-box">
-        <div className="legend-item">
-          <span className="legend-color legend-empty" /> Ô trống
-        </div>
-        <div className="legend-item">
-          <span className="legend-color legend-parked" /> Ô đang đỗ xe
-        </div>
-        <div className="legend-item">
-          <span className="legend-color legend-sensor" /> Ô thuộc nhóm sensor
-        </div>
-        <div className="legend-item">
-          <span className="legend-color legend-sensor-main" /> Sensor chính (ô đại diện)
-        </div>
-        <div className="legend-item">
-          <span className="legend-color legend-path" /> Ô được chọn để tìm đường
-        </div>
-      </div> */}
+            console.log("=================================");
+            console.log("📦 Response:", response);
 
+            // Response structure: { code, data, message }
+            if (response.code === 0 && response.data) {
+                console.log("🎉 Path found!");
+                console.log("   Target slot:", response.data.targetSlot);
+                console.log("   Sensor:", response.data.sensorId);
+                console.log("   Distance:", response.data.distance);
+                console.log("   Path:", response.data.path);
 
-      <div
-        className="parking-map"
-        style={
-          {
-            // CSS custom properties để grid sizing
-            "--rows": rows,
-            "--cols": cols,
-          } as React.CSSProperties
-        }
-        aria-hidden={false}
-      >
-        {matrix.map((row, r) =>
-          row.map((cellValue, c) => {
-            const key = `${r}-${c}`;
-            const gradient = borderGradients[key];
+                setPathData(response.data);
 
-            const classes = ["map-cell"];
-            if (isSensorCell(r, c)) {
-              classes.push("cell-sensor");
-              if (isSensorMain(r, c)) classes.push("cell-sensor-main");
+                // Convert positions to slot IDs
+                if (Array.isArray(response.data.path)) {
+                    const slotIds = response.data.path
+                        .map((pos: [number, number]) => {
+                            const [row, col] = pos;
+                            const id = calculateSlotId([row, col]);
+                            console.log(`   Position [${row}, ${col}] → Slot ${id}`);
+                            return id;
+                        })
+                        .filter((id: number) => id > 0 && id <= 100);
+
+                    console.log("✅ Path slots:", slotIds);
+                    setPathSlotIds(slotIds);
+
+                    messageService.success(
+                        `Tìm thấy đường đi đến slot ${response.data.targetSlot} (${slotIds.length} bước)`
+                    );
+                } else {
+                    console.warn("⚠️ Path is not an array");
+                }
             } else {
-              classes.push(`cell-${cellValue}`);
+                console.log("❌ No path:", response.message);
+                messageService.error(response.message || "Không tìm thấy đường đi");
             }
 
-            const style: React.CSSProperties = {
-              background: isSensorCell(r, c) ? undefined : gradient || undefined,
-            };
+            console.log("=================================");
 
-            return <div key={key} className={classes.join(" ")} style={style} />;
-          })
-        )}
-      </div>
-    </div>
-  );
+        } catch(e: any) {
+            console.error("❌ Exception:", e);
+            messageService.error("Lỗi khi tìm đường");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const calculateSlotId = (position: [number, number]): number => {
+        const [row, col] = position;
+        const cols = 10;
+        return row * cols + col + 1;
+    }
+
+    const clearPath = () => {
+        setPathData(null);
+        setPathSlotIds([]);
+        message.info("Đã xóa đường đi");
+    }
+
+    const getSlotStyle = (slotId: number, status: number): React.CSSProperties => {
+        if (pathData && slotId === pathData.targetSlot) {
+            return {
+                backgroundColor: "#28a745",
+                color: "white",
+                fontWeight: "bold",
+                padding: "8px",
+                borderRadius: "8px",
+                border: "3px solid #155724",
+                boxShadow: "0 0 15px rgba(40, 167, 69, 0.6)",
+                transform: "scale(1.1)"
+            };
+        }
+
+        if (pathSlotIds.includes(slotId)) {
+            return {
+                backgroundColor: "#ffc107",
+                color: "#000",
+                fontWeight: "600",
+                padding: "8px",
+                borderRadius: "8px",
+                border: "2px solid #ff9800",
+                boxShadow: "0 0 10px rgba(255, 193, 7, 0.4)"
+            };
+        }
+
+        return {
+            color: status === 0 ? "#dc3545" : "black",
+            transition: "all 0.3s ease",
+            padding: "8px"
+        };
+    }
+
+    const getCarIconColor = (slotId: number, status: number): string => {
+        if (pathData && slotId === pathData.targetSlot) return "white";
+        if (pathSlotIds.includes(slotId)) return "#000";
+        return status === 0 ? "#dc3545" : "black";
+    }
+
+    return(
+        <>
+            <Row>
+                <Col span={24} style={{paddingBottom: "20px"}}>
+                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px"}}>
+                        <div style={{fontSize: "16px", fontWeight: "500"}}>
+                            {`Số vị trí trống: ${emptyPosition.length}/100`}
+                        </div>
+
+                        <div style={{display: "flex", gap: "10px"}}>
+                            <Button
+                                type="primary"
+                                icon={<Navigation size={16} />}
+                                onClick={getFindPath}
+                                loading={loading}
+                                size="middle"
+                            >
+                                Tìm đường
+                            </Button>
+
+                            {pathData && (
+                                <Button
+                                    onClick={clearPath}
+                                    size="middle"
+                                >
+                                    Xóa đường đi
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {pathData && (
+                        <div style={{
+                            marginTop: "15px",
+                            padding: "15px",
+                            backgroundColor: "#e8f5e9",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            border: "2px solid #4caf50"
+                        }}>
+                            <div style={{marginBottom: "5px"}}>
+                                <strong>🎯 Slot đích:</strong> {pathData.targetSlot}
+                            </div>
+                            <div style={{marginBottom: "5px"}}>
+                                <strong>📡 Sensor ID:</strong> {pathData.sensorId}
+                            </div>
+                            <div style={{marginBottom: "5px"}}>
+                                <strong>📏 Khoảng cách:</strong> {pathData.distance} bước
+                            </div>
+                            <div>
+                                <strong>🗺️ Lộ trình:</strong> {pathSlotIds.length > 0 ? pathSlotIds.join(' → ') : 'N/A'}
+                            </div>
+                        </div>
+                    )}
+                </Col>
+
+                <Col span={24}>
+                    {/* Legend */}
+                    <div style={{
+                        display: "flex",
+                        gap: "15px",
+                        marginBottom: "15px",
+                        padding: "10px",
+                        backgroundColor: "#f5f5f5",
+                        borderRadius: "6px",
+                        flexWrap: "wrap"
+                    }}>
+                        <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+                            <div style={{width: "16px", height: "16px", backgroundColor: "#dc3545", borderRadius: "3px"}}></div>
+                            <span style={{fontSize: "13px"}}>Trống</span>
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+                            <div style={{width: "16px", height: "16px", backgroundColor: "black", borderRadius: "3px"}}></div>
+                            <span style={{fontSize: "13px"}}>Có xe</span>
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+                            <div style={{width: "16px", height: "16px", backgroundColor: "#ffc107", border: "2px solid #ff9800", borderRadius: "3px"}}></div>
+                            <span style={{fontSize: "13px"}}>Đường đi</span>
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+                            <div style={{width: "16px", height: "16px", backgroundColor: "#28a745", border: "2px solid #155724", borderRadius: "3px"}}></div>
+                            <span style={{fontSize: "13px"}}>Đích đến</span>
+                        </div>
+                    </div>
+
+                    {/* Grid */}
+                    <div style={{
+                        width: "100%",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                        border: "2px solid #ddd",
+                        padding: "20px",
+                        borderRadius: "8px",
+                        backgroundColor: "white"
+                    }}>
+                        {
+                            Array.from({length: 100}, (_, index) => ({
+                                id: index + 1,
+                                status: emptyPosition.includes(index + 1) ? 0 : 1
+                            })).map((item) => {
+                                const baseStyle: React.CSSProperties = {
+                                    width: "calc(20% - 6.4px)",
+                                    minWidth: "70px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    cursor: "pointer",
+                                    userSelect: "none"
+                                };
+
+                                const slotStyle = getSlotStyle(item.id, item.status);
+                                const combinedStyle = { ...baseStyle, ...slotStyle };
+
+                                return (
+                                    <div key={item.id} style={combinedStyle}>
+                                        <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+                                            <CarFront
+                                                strokeWidth={1.5}
+                                                size={18}
+                                                color={getCarIconColor(item.id, item.status)}
+                                            />
+                                            <div style={{fontSize: "15px"}}>
+                                                {item.id}
+                                            </div>
+                                        </div>
+                                        <div style={{fontSize: "10px", marginTop: "3px"}}>
+                                            {pathData && item.id === pathData.targetSlot
+                                                ? "🎯"
+                                                : pathSlotIds.includes(item.id)
+                                                    ? "→"
+                                                    : item.status === 0 ? "Trống" : "Xe"}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        }
+                    </div>
+                </Col>
+            </Row>
+            <LoadingModal
+                open={loading}
+                message="Đang xử lý..."
+            />
+        </>
+    )
 }
+
+export default ParkingMap;
