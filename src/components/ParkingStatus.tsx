@@ -1,12 +1,14 @@
 import { Col, Row } from "antd";
-import { useEffect, useState, type JSX } from "react";
+import { useContext, useEffect, useState, type JSX } from "react";
 import { messageService } from "../configs/interface";
 import LoadingModal from "./LoadingModal";
 import { getEmptyPositionApi } from "../services/appService";
 import { CarFront } from "lucide-react";
+import { UserContext } from "../configs/globalVariable";
 
 const ParkingStatus = (): JSX.Element => {
-    const [emptyPosition, setEmptyPosition] = useState<number[]>([]);
+    const {irData} = useContext(UserContext);
+    const [emptyPosition, setEmptyPosition] = useState<{pos: number, status: number}[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -18,7 +20,10 @@ const ParkingStatus = (): JSX.Element => {
         try {   
             const result = await getEmptyPositionApi();
             if (result.code == 0) {
-                setEmptyPosition(result.data);
+                setEmptyPosition(result.data.map((item: any) => ({
+                    pos: item,
+                    status: 0
+                })));
             } else {
                 messageService.error(result.message);
             }
@@ -29,6 +34,13 @@ const ParkingStatus = (): JSX.Element => {
             setLoading(false);
         }
     }
+
+    useEffect(() => {
+        setEmptyPosition((prev) => (
+            prev.map((item, index) => ({...item, status: irData[index]}))
+        ))
+    }, [irData]);
+
     return(
         <>
             <Row>
@@ -40,7 +52,7 @@ const ParkingStatus = (): JSX.Element => {
                         {
                             Array.from({length: 100}, (_, index) => ({
                                 id: index + 1,
-                                status: emptyPosition.includes(index + 1) ? 0 : 1
+                                status: emptyPosition.find((item) => (item.pos == index + 1)) ? emptyPosition.find((item) => (item.pos == index + 1))?.status : 1
                             })).map((item) => (
                                 <div style={{width: "20%", display: "flex", flexDirection: "column", alignItems: "center"}}>
                                     <div style={{display: "flex", alignItems: "center", gap: "10px"}}>

@@ -13,8 +13,10 @@ export const getPlateNumberApi = (): Promise<BackendResponse> => {
     return axios.get("/get-plate-number");
 }
 
-export const createTicketApi = (): Promise<BackendResponse> => {
-    return axios.get("/create-ticket");
+export const createTicketApi = (plateNumber: string, imageIn: string): Promise<BackendResponse> => {
+    return axios.post("/create-ticket", {
+        plateNumber, imageIn
+    });
 }
 
 export const sendOtpApi = (): Promise<BackendResponse> => {

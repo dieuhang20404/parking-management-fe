@@ -1,7 +1,7 @@
 import { Col, Row } from "antd";
 import { useEffect, useState, type JSX } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { CarFront, History } from "lucide-react";
+import { Camera, CarFront, History } from "lucide-react";
 import "./HeaderOfAdmin.scss";
 
 const HeaderOfAdmin = (): JSX.Element => {
@@ -9,22 +9,26 @@ const HeaderOfAdmin = (): JSX.Element => {
     const location = useLocation();
     
     const [indexOfItem, setIndexOfItem] = useState<number>(0);
-    const iconsItem = [CarFront, History]
-    const nameItem = ["Trạng thái", "Lịch sử"]
+    const iconsItem = [Camera, CarFront, History]
+    const nameItem = ["Giám sát", "Trạng thái", "Lịch sử"]
 
     useEffect(() => {
         const path = location.pathname;
-        if (path == "/admin/status") {
+        if (path == "/admin/supervised") {
             setIndexOfItem(0);
-        } else if (path == "/admin/history") {
+        } else if (path == "/admin/status") {
             setIndexOfItem(1);
+        } else if (path == "/admin/history") {
+            setIndexOfItem(2);
         }
     }, [])
 
     const navigateMenu = (index: number) => {
         if (index == 0) {
-            navigate("/admin/status");
+            navigate("/admin/supervised");
         } else if (index == 1) {
+            navigate("/admin/status");
+        } else if (index == 2) {
             navigate("/admin/history");
         }
     }

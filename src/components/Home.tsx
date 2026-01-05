@@ -109,7 +109,10 @@ const Home = (): JSX.Element => {
             const result = await checkoutApi(imgUrl);
             // Xử lý lấy xe (từ qr code tìm ra biển số xe rồi so với biển số xe camera đang quét)
             if (result.code == 0) {
-
+                setShowTicket(false);
+                setTicketList((prev) => (
+                    prev.map((item) => (item.id == result.data[0].id ? {...item, timeOut: dayjs(result.data[0].timeOut)} : item))
+                ))
             } else {
                 messageService.error(result.message)
             }

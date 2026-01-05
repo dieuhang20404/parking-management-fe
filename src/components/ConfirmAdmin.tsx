@@ -65,7 +65,7 @@ const ConfirmAdmin = (): JSX.Element => {
         } else {
             setPageLoading(false);
             setOpen(false);
-            navigate("/admin/status")
+            navigate("/admin/supervised")
         }
         
     }
@@ -83,7 +83,7 @@ const ConfirmAdmin = (): JSX.Element => {
             if (result.code == 0) {
                 localStorage.setItem("admin", result.data);
                 setOpen(false);
-                navigate("/admin/status");
+                navigate("/admin/supervised");
             } else {
                 setOpen(false);
                 navigate("/");
