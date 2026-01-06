@@ -9,13 +9,15 @@ export const getAllTicketApi = (): Promise<BackendResponse> => {
     return axios.get("/get-all-ticket");
 }
 
-export const getPlateNumberApi = (): Promise<BackendResponse> => {
-    return axios.get("/get-plate-number");
+export const getPlateNumberApi = (irData: number[]): Promise<BackendResponse> => {
+    return axios.post("/get-plate-number", {
+        irData
+    });
 }
 
-export const createTicketApi = (plateNumber: string, imageIn: string): Promise<BackendResponse> => {
+export const createTicketApi = (plateNumber: string, imageIn: string, irData: number[]): Promise<BackendResponse> => {
     return axios.post("/create-ticket", {
-        plateNumber, imageIn
+        plateNumber, imageIn, irData
     });
 }
 
@@ -33,15 +35,15 @@ export const getEmptyPositionApi = (): Promise<BackendResponse> => {
     return axios.get("/get-empty-position");
 }
 
-export const getFindPathApi = (position?: [number, number]): Promise<BackendResponse> => {
+export const getFindPathApi = (irData: number[], position?: [number, number]): Promise<BackendResponse> => {
     const [x, y] = position || [0, 0];
-    return axios.get("/get-find-path", {
-        params: { x, y }
+    return axios.post("/get-find-path", {
+        irData, x, y
     });
 }
-export const checkoutApi = (qrCode: string): Promise<BackendResponse> => {
+export const checkoutApi = (id: number): Promise<BackendResponse> => {
     return axios.post("/checkout", {
-        qrCode
+        id
     })
 }
 

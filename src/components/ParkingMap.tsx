@@ -1,26 +1,32 @@
 import { Col, Row, Button, message } from "antd";
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useState, type Dispatch, type JSX, type SetStateAction } from "react";
 import { messageService } from "../configs/interface";
 import LoadingModal from "./LoadingModal";
 import { getEmptyPositionApi, getFindPathApi } from "../services/appService";
 import { CarFront, Navigation } from "lucide-react";
 import React from "react";
 
-interface PathData {
+export interface PathData {
     path: [number, number][];
     targetSlot: number;
     sensorId: number | string;
     distance: number;
 }
 
-const ParkingMap = (): JSX.Element => {
-    const [emptyPosition, setEmptyPosition] = useState<number[]>([]);
+export interface ParkingMapProps {
+    pathData: PathData | null,
+    setPathData: Dispatch<SetStateAction<PathData | null>>,
+    irDataTmp: number[]
+}
+
+const ParkingMap = ({irDataTmp}: ParkingMapProps): JSX.Element => {
     const [loading, setLoading] = useState<boolean>(false);
+    const [emptyPosition, setEmptyPosition] = useState<number[]>([]);
     const [pathData, setPathData] = useState<PathData | null>(null);
     const [pathSlotIds, setPathSlotIds] = useState<number[]>([]);
 
     useEffect(() => {
-        getEmptyPosition();
+        getEmptyPosition().then();
     }, [])
 
     const getEmptyPosition = async () => {
@@ -28,7 +34,15 @@ const ParkingMap = (): JSX.Element => {
         try {
             const result = await getEmptyPositionApi();
             if (result.code == 0) {
-                setEmptyPosition(result.data);
+                const sensorId = result.data;
+                const empty = [];
+                for (let i = 0; i < sensorId.length; i++) {
+                    if (irDataTmp[i] == 1) {
+                        empty.push(sensorId[i]);
+                    }
+                }
+                setEmptyPosition(empty);
+                console.log(empty)
             } else {
                 messageService.error(result.message);
             }
@@ -43,7 +57,7 @@ const ParkingMap = (): JSX.Element => {
     const getFindPath = async () => {
         setLoading(true);
         try {
-            const response = await getFindPathApi();
+            const response = await getFindPathApi(irDataTmp);
 
             console.log("=================================");
             console.log("📦 Response:", response);
@@ -102,7 +116,7 @@ const ParkingMap = (): JSX.Element => {
     const clearPath = () => {
         setPathData(null);
         setPathSlotIds([]);
-        message.info("Đã xóa đường đi");
+        message.info("Đã xóa đường đi").then();
     }
 
     const getSlotStyle = (slotId: number, status: number): React.CSSProperties => {
