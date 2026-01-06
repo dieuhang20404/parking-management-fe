@@ -4,7 +4,6 @@ import { UserContext } from "../configs/globalVariable";
 
 const ParkingSupervised = (): JSX.Element => {
     const wsRef = useRef<WebSocket | null>(null);
-    const {irData, setIrData} = useContext(UserContext);
     const [videoUrl, setVideoUrl] = useState<string>("");
 
     useEffect(() => {
@@ -21,15 +20,6 @@ const ParkingSupervised = (): JSX.Element => {
                 setVideoUrl(url);
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
                 return;
-            }
-
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === "ir") {
-                    setIrData(msg.data[0].ir);
-                }
-            } catch (e) {
-                console.log("Non-JSON message:", event.data);
             }
         };
 

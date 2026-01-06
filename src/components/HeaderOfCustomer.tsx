@@ -1,25 +1,60 @@
 import { Button, Col, Modal, Row } from "antd";
-import { useContext, useEffect, useState, type JSX } from "react";
+import { useContext, useEffect, useRef, useState, type JSX } from "react";
 import { messageService, useScreens } from "../configs/interface";
 import { createTicketApi, getPlateNumberApi } from "../services/appService";
 import LoadingModal from "./LoadingModal";
 import { UserContext } from "../configs/globalVariable";
 import dayjs from "dayjs";
+import type { PathData } from "./ParkingMap";
+import ParkingMap from "./ParkingMap";
 
 const HeaderOfCustomer = (): JSX.Element => {
-    const {ticketList, setTicketList} = useContext(UserContext);
+    const wsRef = useRef<WebSocket | null>(null);
+    const {setTicketList, irData, setIrData} = useContext(UserContext);
     const [loading, setLoading] = useState<boolean>(false);
     const [showConfirm, setShowConfirm] = useState<boolean>(false);
     const [plateNumber, setPlateNumber] = useState<string>("");
     const [imageIn, setImageIn] = useState<string>("");
 
+    const [pathData, setPathData] = useState<PathData | null>(null);
+    const [showMap, setShowMap] = useState<boolean>(false);
+    const [irDataTmp, setIrDataTmp] = useState<number[]>([]);
+
+    useEffect(() => {
+        const ws = new WebSocket(`ws://${import.meta.env.VITE_ESP32_IP}:${import.meta.env.VITE_ESP32_PORT}`);
+        ws.binaryType = "arraybuffer";
+        wsRef.current = ws;
+
+        ws.onopen = () => console.log("Connected to ESP32");
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "ir") {
+                    setIrData(msg.data[0].ir);
+                    console.log(msg.data[0].ir)
+                }
+            } catch (e) {
+                console.log("Non-JSON message:", event.data);
+            }
+        };
+
+        ws.onclose = () => console.log("ESP32 disconnected");
+        ws.onerror = (err) => console.error(err);
+
+        return () => ws.close();
+    }, []);
+
     const getPlateNumber = async () => {
         setLoading(true)
         try {
-            const result = await getPlateNumberApi();
+            const tmp = irData;
+            setIrDataTmp(tmp);
+            console.log("abcd: ", tmp)
+            const result = await getPlateNumberApi(tmp);
             if (result.code == 0) {
                 setPlateNumber(result.data.plateNumber);
-                setImageIn(result.data.detectResult);
+                setImageIn(result.data.imageUrl);
                 setShowConfirm(true);
             } else {
                 messageService.error(result.message)
@@ -36,25 +71,28 @@ const HeaderOfCustomer = (): JSX.Element => {
         setShowConfirm(false);
         setLoading(true)
         try {
-            const result = await createTicketApi(plateNumber, imageIn);
+            const result = await createTicketApi(plateNumber, imageIn, irDataTmp);
             if (result.code == 0) {
+                const ticket = result.data.ticket;
                 // Thêm vé vào bảng danh sách vé
                 setTicketList((prev) => (
                     [
                         {
-                            id: result.data.id,
-                            plateNumber: result.data.plateNumber,
-                            timeIn: dayjs(result.data.timeIn),
-                            timeOut: result.data.timeOut ? dayjs(result.data.timeOut) : null,
-                            uuid: result.data.uuid,
-                            qrCode: result.data.qrCode,
-                            parkingLotId: result.data.parkingLotId
+                            id: ticket.id,
+                            plateNumber: ticket.plateNumber,
+                            timeIn: dayjs(ticket.timeIn),
+                            timeOut: ticket.timeOut ? dayjs(ticket.timeOut) : null,
+                            uuid: ticket.uuid,
+                            qrCode: ticket.qrCode,
+                            parkingLotId: ticket.parkingLotId
                         },
                         ...prev
                     ]
                 ))
                 // Hiện map
-                
+                const findPath = result.data.findPath;
+                setPathData(findPath);
+                setShowMap(true)
             } else {
                 messageService.error(result.message)
             }
@@ -114,10 +152,28 @@ const HeaderOfCustomer = (): JSX.Element => {
                 cancelButtonProps={{size: "large"}}
             >
                 <Row className="py-1">
-                    <Col>
+                    <Col span={24}>
                         <div>{`Biển số xe của bạn là: ${plateNumber}`}</div>
                     </Col>
                 </Row>
+            </Modal>
+            <Modal
+                title={<span style={{fontFamily: "Quicksand", fontSize: "18px"}}>Hướng dẫn đến điểm đỗ xe</span>}
+                open={showMap}
+                centered={true}
+                maskClosable={false}
+                onOk={() => {setShowMap(false)}}
+                onCancel={() => {setShowMap(false)}}
+                okText="OK"
+                cancelText="Hủy"
+                okButtonProps={{size: "large"}}
+                cancelButtonProps={{size: "large"}}
+            >
+                <ParkingMap 
+                    pathData={pathData}
+                    setPathData={setPathData}
+                    irDataTmp={irDataTmp}
+                />
             </Modal>
         </>
     )

@@ -11,6 +11,7 @@ const Home = (): JSX.Element => {
     const {ticketList, setTicketList} = useContext(UserContext);
     const [getTicketLoading, setGetTicketLoading] = useState<boolean>(false);
     const [imgUrl, setImgUrl] = useState<string>("");
+    const [idSelect, setIdSelect] = useState<number>(0);
     const [showTicket, setShowTicket] = useState<boolean>(false);
     const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
 
@@ -58,12 +59,13 @@ const Home = (): JSX.Element => {
             key: "ticket",
             dataIndex: "qrCode",
             align: "center",
-            render: (_, record, __) => (
+            render: (_, record, __) => record.timeOut ? null : (
                 <div 
                     className="text-link" 
                     onClick={() => {
                         setShowTicket(true);
                         setImgUrl(record.qrCode);
+                        setIdSelect(record.id);
                     }}
                 >
                     Xem
@@ -107,8 +109,7 @@ const Home = (): JSX.Element => {
     const checkout = async () => {
         setCheckoutLoading(true)
         try {
-            const result = await checkoutApi(imgUrl);
-            // Xử lý lấy xe (từ qr code tìm ra biển số xe rồi so với biển số xe camera đang quét)
+            const result = await checkoutApi(idSelect);
             if (result.code == 0) {
                 setShowTicket(false);
                 setTicketList((prev) => (
@@ -125,48 +126,9 @@ const Home = (): JSX.Element => {
         }
     }
 
-    useEffect(() => {
-        const handleNewTicket = (ticket: any) => {
-            console.log(ticket);
-            setTicketList((prev) => (
-                [
-                    {
-                        id: ticket.id,
-                        plateNumber: ticket.plateNumber,
-                        timeIn: dayjs(ticket.timeIn),
-                        timeOut: null,
-                        uuid: ticket.uuid,
-                        qrCode: ticket.qrCode,
-                        parkingLotId: ticket.parkingLotId
-                    }, 
-                    ...prev
-                ]
-            ))
-        }
-        socket.on("ticket:create", handleNewTicket);
-
-        return () => {
-            socket.off("ticket:create", handleNewTicket);
-        }
-    }, [])
-
-    const createTicketTest = async () => {
-        try {
-            const result = await createTicketTestApi();
-            if (result.code == 0) {
-                messageService.success(result.message);
-            } else {
-                messageService.error(result.message);
-            }
-        } catch(e) {
-            console.log(e);
-            messageService.error("Xảy ra lỗi ở server");
-        }
-    }
-
     return(
         <>
-            <Row gutter={[0, 20]} style={{width: "100%", padding: "0px 10px"}}>
+            <Row gutter={[0, 20]} style={{width: "100%", minHeight: "fit-content", padding: "0px 10px"}}>
                 <Col span={24} style={{display: "flex", justifyContent: "center", paddingTop: "10px"}}>
                     <div style={{fontSize: "20px"}}>Danh Sách Vé Xe</div>
                 </Col>
@@ -179,18 +141,6 @@ const Home = (): JSX.Element => {
                         scroll={{x: "max-content"}}
                         loading={getTicketLoading}
                     />
-                </Col>
-                <Col span={24} style={{display: "flex", justifyContent: "center"}}>
-                    <Button
-                        variant="solid"
-                        color="primary"
-                        size="large"
-                        onClick={() => {
-                            createTicketTest();
-                        }}
-                    >
-                        Test
-                    </Button>
                 </Col>
             </Row>
             <Modal
